@@ -16,15 +16,17 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 class TodoListsController extends AppController
 {
     /**
-     * Index method
-     *
-     * @return \Cake\Http\Response|null|void Renders view
+     * view all todo_lists of a user
      */
     public function index()
     {
+        //only allow get requests to this endpoint
         $this->request->allowMethod('get');
 
+        //fetch user id of the logged in user
         $user_id = $this->Authentication->getIdentity()['id'];
+
+        //query the database
         $lists = $this->TodoLists->find()->where(['user_id'=>$user_id])->toArray();
 
         if (count($lists) === 0) {
@@ -34,6 +36,9 @@ class TodoListsController extends AppController
         return $this->respond(200, $lists, 'Lists fetched from the database');
     }
 
+    /**
+     * view one todo_list with its contents
+     */
     public function findOne()
     {
         $this->request->allowMethod('get');
@@ -55,17 +60,16 @@ class TodoListsController extends AppController
     }
 
     /**
-     * Add method
-     *
-     * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
+     * Create a new todo_list
      */
     public function create()
     {
         $this->request->allowMethod('post');
 
         $user_id = $this->Authentication->getIdentity()['id'];
-
+        //create a new list entity with the provided data
         $list = $this->TodoLists->newEntity($this->request->getData());
+        //update the lists' user_id so that it corresponds to the logged in user
         $list->user_id = $user_id;
 
         if ($this->TodoLists->save($list)) {
@@ -75,11 +79,7 @@ class TodoListsController extends AppController
     }
 
     /**
-     * Edit method
-     *
-     * @param string|null $id Todo List id.
-     * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * update a todo_list of the authenticated user
      */
     public function update()
     {
@@ -97,8 +97,9 @@ class TodoListsController extends AppController
             return $this->respond(400, [], 'Record not found');
         }
 
+        //update the list with provided data
         $this->TodoLists->patchEntity($list, $this->request->getData());
-
+        //try saving the list
         if ($this->TodoLists->save($list)) {
             return $this->respond(200, $list, 'List updated');
         }
@@ -106,11 +107,7 @@ class TodoListsController extends AppController
     }
 
     /**
-     * Delete method
-     *
-     * @param string|null $id Todo List id.
-     * @return \Cake\Http\Response|null|void Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * Delete a todo_list of a user
      */
     public function delete()
     {
@@ -128,7 +125,7 @@ class TodoListsController extends AppController
         } catch (RecordNotFoundException $e) {
             return $this->respond(400, [], 'Record not found');
         }
-
+        //try deleting the list
         if ($this->TodoLists->delete($list)) {
             return $this->respond(200, $list, 'List Deleted');
         }
